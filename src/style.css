@@ -23,3 +23,39 @@
 @keyframes reaction-appear{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:760px){.meeting-interactions{padding:8px 12px}.reaction-notices{right:12px}.reaction-options{left:auto;right:0;gap:0;padding:5px}.reaction-options button{width:32px}}
 @media(prefers-reduced-motion:reduce){.reaction-notice{animation:none}}
+
+/* Landing page: let content shrink naturally instead of overflowing phones. */
+.hero-left,.schedule-banner>div:nth-child(2),.slide-text{min-width:0}
+@media(min-width:761px) and (max-width:960px){
+ .home .hero{grid-template-columns:minmax(0,1fr);gap:40px;min-height:0;padding:36px 0 48px}
+ .hero-left{max-width:640px}.home .hero-right{width:100%;max-width:500px;margin:auto}
+ .schedule-banner{flex-wrap:wrap}.schedule-banner .btn{margin-left:66px}
+}
+@media(max-width:760px){
+ .header{height:72px;padding:0 20px;gap:12px}.header-right{gap:8px}.header .icon-btn{width:44px;height:44px}
+ .home{padding:0 20px}.home .hero{min-height:0;padding:28px 0 36px;gap:32px;grid-template-columns:minmax(0,1fr)}
+ .home .hero-left{width:100%;max-width:560px;margin:auto}.home .hero h1{font-size:clamp(32px,7.5vw,43px);line-height:1.16;letter-spacing:-1.2px;margin:20px 0}
+ .home .eyebrow{font-size:9px;letter-spacing:1px;line-height:1.6}.blue-dash{flex-shrink:0}
+ .home .intro{font-size:16px;line-height:1.65}.meeting-actions{margin-top:26px;gap:12px}
+ .meeting-actions .new-meeting{width:100%}.meeting-actions .new-btn{width:100%;min-height:50px}
+ .meeting-menu{width:min(100%,320px)}.meeting-menu button{line-height:1.5}
+ .join-form{width:100%;min-width:0;gap:8px}.join-form .code-field{width:auto;flex:1;min-width:0;height:50px}
+ .code-field input{font-size:16px}.join-btn{min-width:60px;min-height:50px;flex-shrink:0}
+ .hero-note{align-items:flex-start;line-height:1.6}.hero-note svg{margin-top:2px}.sub-note{line-height:1.7}
+ .hero-art{max-width:460px}.hero-art img{border-radius:16px}.carousel{gap:6px}.carousel .icon-btn{width:44px;height:44px}
+ .slide-text{min-height:0}.slide-text h2{font-size:19px;line-height:1.35;margin-bottom:8px}.slide-text p{font-size:13px;line-height:1.65}
+ .slide-dots{gap:2px;margin-top:8px}.slide-dots button{width:32px;height:32px;background:none;display:grid;place-items:center}
+ .slide-dots button:after{position:static;width:6px;height:6px;border-radius:50%;background:#d7dee8}.slide-dots button.active{background:none}.slide-dots button.active:after{background:var(--blue)}
+ .schedule-banner{display:grid;grid-template-columns:48px minmax(0,1fr);padding:18px;gap:14px}
+ .schedule-banner>div:nth-child(2){min-width:0}.schedule-banner h3{line-height:1.5}.schedule-banner p{line-height:1.7}
+ .schedule-banner .btn{grid-column:1/-1;margin-left:0;width:100%;min-height:46px;white-space:normal}
+ .section-heading{gap:8px;flex-wrap:wrap}.meeting-row-icon{flex-shrink:0}.meeting-row .icon-btn{width:44px;height:44px}
+ .footer{padding:20px 20px max(24px,env(safe-area-inset-bottom));gap:12px}.service-status{line-height:1.6}.service-status i{flex-shrink:0}
+ .modal .field input,.modal .field select,.copy-field input{font-size:16px}.modal-actions .btn{min-height:44px}
+}
+@media(max-width:480px){
+ .header{padding:0 16px}.header .brand{font-size:21px;gap:8px}.header .brand-icon{width:36px;height:36px}.header-right{gap:4px}
+ .home{padding:0 16px}.home .hero{padding-top:22px}.home .eyebrow{font-size:8px;letter-spacing:.8px}
+ .meeting-row{display:grid;grid-template-columns:34px minmax(0,1fr) 44px;gap:8px;padding:14px 12px}.meeting-row .text-btn{grid-column:2/-1;justify-self:stretch;min-height:44px;background:#f1f5fc}
+ .footer{padding-left:16px;padding-right:16px}.modal{padding:20px}.modal-actions{gap:8px}.modal-actions .btn{flex:1}
+}
