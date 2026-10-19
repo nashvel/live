@@ -1,0 +1,79 @@
+logging:
+  logs:
+    default:
+      level: INFO
+storage:
+  module: file_system
+  root: /data
+apps:
+  tls:
+    automation:
+      policies:
+        - subjects: ["turn.live.nashvel.com"]
+          key_type: rsa2048
+          issuers:
+            - module: acme
+              preferred_chains:
+                root_common_name: ["ISRG Root X1"]
+    certificates:
+      automate:
+        - live.nashvel.com
+        - turn.live.nashvel.com
+  layer4:
+    servers:
+      main:
+        listen: [":443"]
+        routes:
+          - match:
+              - tls:
+                  sni: ["turn.live.nashvel.com"]
+            handle:
+              - handler: tls
+              - handler: proxy
+                proxy_protocol: v2
+                upstreams:
+                  - dial: ["127.0.0.1:5349"]
+          - match:
+              - tls:
+                  sni: ["live.nashvel.com"]
+            handle:
+              - handler: tls
+                connection_policies:
+                  - alpn: ["http/1.1"]
+              - handler: proxy
+                proxy_protocol: v2
+                upstreams:
+                  - dial: ["127.0.0.1:8080"]
+  http:
+    servers:
+      meeting-web:
+        listen: ["127.0.0.1:8080"]
+        listener_wrappers:
+          - wrapper: proxy_protocol
+            allow: ["127.0.0.1/32"]
+            fallback_policy: REJECT
+        routes:
+          - match:
+              - path: ["/rtc", "/rtc/*", "/twirp/*"]
+            handle:
+              - handler: reverse_proxy
+                upstreams:
+                  - dial: "127.0.0.1:7880"
+            terminal: true
+          - match:
+              - path: ["/connection-status"]
+            handle:
+              - handler: rewrite
+                uri: /
+              - handler: reverse_proxy
+                upstreams:
+                  - dial: "127.0.0.1:7880"
+            terminal: true
+          - handle:
+              - handler: encode
+                encodings:
+                  gzip: {}
+                prefer: ["gzip"]
+              - handler: reverse_proxy
+                upstreams:
+                  - dial: "127.0.0.1:3000"

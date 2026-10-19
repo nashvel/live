@@ -1,0 +1,87 @@
+name: livekit
+services:
+  livekit:
+    image: livekit/livekit-server:v1.13.10@sha256:89ca9ce0791e18d6e03bf6e2c49ceb27e1c754eae8bd50c989386c1a5963791a
+    command: ["--config", "/etc/livekit/livekit.yaml"]
+    network_mode: host
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 2m
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    mem_limit: 2g
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - ./deploy/livekit.yaml:/etc/livekit/livekit.yaml:ro
+      - ./secrets/keys.yaml:/etc/livekit/keys.yaml:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  caddy:
+    image: livekit/caddyl4@sha256:9dd090159a6042a907dbff0ce9dda27a21d2a559dc7b03b60a8e6b1b60b8348e
+    command: ["run", "--config", "/etc/caddy.yaml", "--adapter", "yaml"]
+    network_mode: host
+    restart: unless-stopped
+    init: true
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    mem_limit: 256m
+    environment:
+      XDG_CONFIG_HOME: /data/config
+      XDG_DATA_HOME: /data/caddy
+    volumes:
+      - ./deploy/caddy.yaml:/etc/caddy.yaml:ro
+      - caddy_data:/data
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  meet:
+    image: nashvel-meet:1.0.2
+    build: .
+    network_mode: host
+    restart: unless-stopped
+    init: true
+    read_only: true
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    mem_limit: 384m
+    environment:
+      PUBLIC_ORIGIN: https://live.nashvel.com
+      PORT: "3000"
+      DATA_DIR: /data
+      LIVEKIT_KEY_FILE: /run/secrets/livekit_keys
+    volumes:
+      - ./secrets/meet-keys.yaml:/run/secrets/livekit_keys:ro
+      - meet_data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  caddy_data:
+  meet_data:
