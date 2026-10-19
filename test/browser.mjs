@@ -1,20 +1,23 @@
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
-import {writeFile} from 'node:fs/promises';
+import {writeFile, mkdir} from 'node:fs/promises';
+import {testOrigin, assertLocalTestLink} from './target.mjs';
+const origin=testOrigin();
+await mkdir('qa',{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream','--auto-select-desktop-capture-source=Entire screen']});
 const context=await browser.newContext({viewport:{width:1440,height:1000},permissions:['camera','microphone','clipboard-read','clipboard-write']});
 const page=await context.newPage();
 const errors=[];
 page.on('pageerror',e=>errors.push(e.message));
 try{
- await page.goto('https://live.nashvel.com/',{waitUntil:'networkidle'});
+ await page.goto(origin+'/',{waitUntil:'networkidle'});
  await page.getByRole('heading',{name:/Video calls that bring/}).waitFor();
  await page.screenshot({path:'qa/home-desktop.png',fullPage:true});
  await page.getByRole('button',{name:'New meeting',exact:true}).click();
  await page.getByRole('menuitem',{name:'Create a meeting for later'}).click();
  await page.getByRole('heading',{name:'Your meeting is ready'}).waitFor();
  const link=await page.getByRole('textbox',{name:'Meeting link',exact:true}).inputValue();
- assert.match(link,/^https:\/\/live.nashvel.com\/m\/[a-z]{3}-[a-z]{4}-[a-z]{3}$/);
+ assertLocalTestLink(link,origin);
  await writeFile('qa/meeting-test.json',JSON.stringify({link}));
  await page.getByRole('button',{name:'Copy meeting link',exact:true}).click();
  assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),link);

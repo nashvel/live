@@ -2,6 +2,7 @@ name: nashvel-local
 services:
   secret-init:
     image: nashvel-local-meet
+    pull_policy: never
     user: "0:0"
     entrypoint: ["node", "-e"]
     command:
@@ -24,6 +25,7 @@ services:
       - ./deploy/livekit.local.yaml:/etc/livekit.yaml:ro
       - credentials:/run/secrets:ro
   meet:
+    image: nashvel-local-meet
     build: .
     restart: unless-stopped
     depends_on:
@@ -37,7 +39,7 @@ services:
       PUBLIC_ORIGIN: http://localhost:3000
       BIND_ADDRESS: 0.0.0.0
       LIVEKIT_HTTP_URL: http://livekit:7880
-      LIVEKIT_WS_URL: ws://localhost:7880
+      LIVEKIT_WS_URL: ws://127.0.0.1:7880
       LIVEKIT_KEY_FILE: /run/secrets/livekit_keys
       DATA_DIR: /data
     volumes:

@@ -86,11 +86,20 @@ sudo docker compose up -d --build
 ### Local Docker backend (Windows or Linux)
 
 Use Docker Desktop with its Linux container engine (Hyper-V is supported on
-Windows Pro). Create `secrets/local-keys.yaml` with a new local-only LiveKit
-key mapping (`key: secret`, using a randomly generated secret of at least
-32 characters). Keep this ignored file private; do not reuse production keys.
+Windows Pro). On Windows, use the local launcher from this repository:
+
+```powershell
+.\scripts\start-local.ps1 -Recreate
+```
+
+It creates `secrets/local-keys.yaml` only when missing, preserves existing local
+credentials and data, builds the app, and recreates the local containers. No key
+values are displayed. The file stays ignored and must not use production keys.
+
+For Linux, initialize local credentials before starting the same Compose stack:
 
 ```bash
+node scripts/init-local-secrets.mjs
 docker compose -f compose.local.yaml up -d --build
 docker compose -f compose.local.yaml ps
 ```
@@ -99,6 +108,9 @@ Open **http://localhost:3000**. The image includes the frontend and API;
 LiveKit runs alongside it. The health endpoint is `/api/health`. This setup
 publishes ports only on loopback and is intended for calls on this computer.
 It uses separate local credentials and a separate persistent data volume.
+For embedded Chats calls against this same local media server, see
+[Local Chats testing](docs/LOCAL_CHATS_TESTING.md). The API launcher reads the
+protected file at runtime; it does not copy keys into Chats environment files.
 Stop it with `docker compose -f compose.local.yaml stop`.
 
 The optional server settings `BIND_ADDRESS`, `LIVEKIT_HTTP_URL`, and
@@ -123,7 +135,9 @@ node test/browser.mjs
 node test/call.mjs
 ```
 
-These checks target the deployed `live.nashvel.com` and create test meetings.
+These checks default to `http://localhost:3000` and create synthetic local test
+meetings. Remote targets require explicit `MEET_TEST_ORIGIN` and
+`MEET_TEST_ALLOW_REMOTE=1`; a saved link must match the selected origin.
 Run `browser.mjs` first; it saves the test link used by `call.mjs`. `qa/` is
 ignored by Git. Tests cover create/copy/join links, prejoin, leaving,
 scheduling, calendar export, persistence, mobile layout, two browser video

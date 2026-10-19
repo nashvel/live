@@ -1,7 +1,9 @@
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {testOrigin, assertLocalTestLink} from './target.mjs';
 const {link}=JSON.parse(await readFile('qa/meeting-test.json','utf8'));
+assertLocalTestLink(link,testOrigin());
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream','--auto-select-desktop-capture-source=Entire screen']});
 const contexts=[];const pages=[];const errors=[];
 try{
