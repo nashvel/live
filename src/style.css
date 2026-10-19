@@ -2,3 +2,24 @@
 
 .prejoin-card[data-lk-theme]{color-scheme:light;--lk-control-fg:#3c4043;--lk-fg:#202124;--lk-accent-fg:#fff;--lk-control-active-bg:#dde7f7;--lk-control-active-hover-bg:#d4e1f5}.prejoin-card .lk-prejoin{--lk-control-fg:#3c4043;--lk-control-active-bg:#dde7f7;--lk-control-active-hover-bg:#d4e1f5;--lk-accent-fg:#fff}.prejoin-card .lk-button-menu{color:#3c4043}.prejoin-card .lk-device-menu{background:#fff;color:#202124}.prejoin-card .lk-media-device-select{background:#fff;color:#202124}
 .call-shell .lk-disconnect-button{color:#fff;background:#c53f42}.call-shell .lk-disconnect-button:hover{background:#ae3336}
+
+.hero-art{width:100%;max-width:510px;margin:0 0 28px}.hero-art img{display:block;width:100%;height:auto;border-radius:22px}@media(max-width:760px){.hero-art{margin-bottom:20px}}
+
+/* Keep device toggles and their dropdowns joined at the toolbar button height. */
+.call-shell .lk-control-bar .lk-button-group{height:44px;flex:0 0 auto;align-items:stretch}
+.call-shell .lk-control-bar .lk-button-group>.lk-button:first-child{height:44px;min-height:0;padding:0 14px;border-radius:22px 0 0 22px}
+.call-shell .lk-control-bar .lk-button-group-menu{height:44px}
+.call-shell .lk-control-bar .lk-button-group-menu>.lk-button{height:44px;min-height:0;width:36px;padding:0;justify-content:center;border-radius:0 22px 22px 0;border-left:1px solid #ffffff14}
+.call-shell .lk-control-bar .lk-button-group-menu>.lk-button:after{margin-left:0}
+
+.meeting-interactions{display:flex;align-items:center;gap:8px;padding:8px 24px;flex-wrap:wrap;border-bottom:1px solid #ffffff0d}
+.interaction-button{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:8px 13px;border:1px solid #ffffff1a;border-radius:20px;background:#30343e;color:#f4f5f7;font-size:12px}
+.interaction-button:hover{background:#404653}.interaction-button[aria-pressed=true]{background:#f9d56e;color:#302811;border-color:#f9d56e}
+.reaction-picker{position:relative}.reaction-options{position:absolute;left:0;top:calc(100% + 8px);z-index:30;display:flex;gap:4px;background:#30343e;border:1px solid #ffffff24;border-radius:14px;padding:8px;box-shadow:0 10px 30px #0006}
+.reaction-options button{width:36px;height:40px;border:0;border-radius:9px;background:none;font-size:24px}.reaction-options button:hover{background:#ffffff1a}
+.raised-hands{font-size:12px;color:#f9d56e;overflow-wrap:anywhere;flex:1;min-width:120px}.interaction-error{color:#ffd3c9;font-size:12px}
+.reaction-notices{position:fixed;right:24px;bottom:110px;display:flex;flex-direction:column;gap:8px;pointer-events:none;z-index:40;max-width:min(300px,calc(100vw - 32px))}
+.reaction-notice{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:16px;background:#30343ef2;color:#fff;box-shadow:0 5px 24px #0003;animation:reaction-appear .2s ease-out}.reaction-notice>span{font-size:30px}.reaction-notice small{overflow-wrap:anywhere;font-size:13px}
+@keyframes reaction-appear{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:760px){.meeting-interactions{padding:8px 12px}.reaction-notices{right:12px}.reaction-options{left:auto;right:0;gap:0;padding:5px}.reaction-options button{width:32px}}
+@media(prefers-reduced-motion:reduce){.reaction-notice{animation:none}}

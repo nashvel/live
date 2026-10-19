@@ -9,6 +9,9 @@ import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 const app=express();
 const origin=process.env.PUBLIC_ORIGIN || 'https://live.nashvel.com';
 const port=Number(process.env.PORT || 3000);
+const bindAddress=process.env.BIND_ADDRESS || '127.0.0.1';
+const livekitHttpUrl=process.env.LIVEKIT_HTTP_URL || 'http://127.0.0.1:7880';
+const livekitWsUrl=process.env.LIVEKIT_WS_URL || 'wss://live.nashvel.com';
 const dataDir=process.env.DATA_DIR || '/data';
 mkdirSync(dataDir,{recursive:true});
 const db=new DatabaseSync(path.join(dataDir,'meetings.sqlite'));
@@ -18,12 +21,12 @@ const split=credentials.indexOf(':');
 if(split<1)throw new Error('Invalid LiveKit key file');
 const key=credentials.slice(0,split).trim();
 const secret=credentials.slice(split+1).trim();
-const roomService=new RoomServiceClient('http://127.0.0.1:7880',key,secret);
+const roomService=new RoomServiceClient(livekitHttpUrl,key,secret);
 app.disable('x-powered-by');
 app.set('trust proxy','loopback');
 app.use((req,res,next)=>{
  res.set({'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','X-Frame-Options':'DENY','Permissions-Policy':'camera=(self), microphone=(self), display-capture=(self)',
- 'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' wss://live.nashvel.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"});
+ 'Content-Security-Policy':`default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' ${new URL(livekitWsUrl).origin}; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`});
  if(req.path.startsWith('/api/'))res.set('Cache-Control','no-store');
  next();
 });
@@ -45,7 +48,7 @@ app.use('/api',(req,res,next)=>{if(req.method!=='GET'&&req.get('origin')!==origi
 const codePattern=/^[a-z]{3}-[a-z]{4}-[a-z]{3}$/;
 const publicMeeting=row=>({code:row.code,title:row.title,startsAt:row.starts_at,duration:row.duration,expiresAt:row.expires_at,url:origin+'/m/'+row.code});
 function findMeeting(code){if(!codePattern.test(code))return null;return db.prepare('SELECT * FROM meetings WHERE code=? AND expires_at>?').get(code,Date.now());}
-app.get('/api/health',async(req,res)=>{try{const check=await fetch('http://127.0.0.1:7880/',{signal:AbortSignal.timeout(2500)});res.status(check.ok?200:503).json({available:check.ok});}catch{res.status(503).json({available:false});}});
+app.get('/api/health',async(req,res)=>{try{const check=await fetch(livekitHttpUrl+'/',{signal:AbortSignal.timeout(2500)});res.status(check.ok?200:503).json({available:check.ok});}catch{res.status(503).json({available:false});}});
 app.post('/api/meetings',(req,res)=>{
  const {title='New meeting',startsAt=null,duration=60}=req.body || {};
  if(typeof title!=='string'||!title.trim()||title.trim().length>100||/[\u0000-\u001f]/.test(title))return res.status(400).json({error:'Use a meeting title of 1–100 characters.'});
@@ -68,7 +71,7 @@ app.post('/api/meetings/:code/token',async(req,res)=>{
   await roomService.createRoom({name:'meet-'+row.code,maxParticipants:12,emptyTimeout:300,departureTimeout:30});
   const token=new AccessToken(key,secret,{identity:randomUUID(),name:name.trim(),ttl:'15m'});
   token.addGrant({roomJoin:true,room:'meet-'+row.code,canPublish:true,canSubscribe:true,canPublishData:true,canUpdateOwnMetadata:false});
-  res.json({token:await token.toJwt(),serverUrl:'wss://live.nashvel.com'});
+  res.json({token:await token.toJwt(),serverUrl:livekitWsUrl});
  }catch(error){console.error('Token issuance failed:',error.code||error.name);res.status(503).json({error:'The meeting service is temporarily unavailable. Please try again.'});}
 });
 app.use('/api',(req,res)=>res.status(404).json({error:'Not found.'}));
@@ -77,5 +80,5 @@ app.use(express.static(path.join(root,'dist'),{index:false,maxAge:'1h',setHeader
 app.use((req,res,next)=>{if(req.method==='GET'&&(req.path==='/'||/^\/m\/[a-z]{3}-[a-z]{4}-[a-z]{3}$/.test(req.path))){res.set('Cache-Control','no-cache');return res.sendFile(path.join(root,'dist/index.html'));}next();});
 app.use((req,res)=>res.status(404).send('Not found'));
 app.use((error,req,res,next)=>res.status(error.status===413?413:400).json({error:'Invalid request.'}));
-const server=app.listen(port,'127.0.0.1',()=>console.log('Nashvel Meet listening on loopback port '+port));
+const server=app.listen(port,bindAddress,()=>console.log('Nashvel Meet listening on '+bindAddress+':'+port));
 process.on('SIGTERM',()=>server.close(()=>{db.close();process.exit(0);}));

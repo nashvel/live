@@ -83,6 +83,28 @@ sudo docker compose up -d --build
 
 ## Development and checks
 
+### Local Docker backend (Windows or Linux)
+
+Use Docker Desktop with its Linux container engine (Hyper-V is supported on
+Windows Pro). Create `secrets/local-keys.yaml` with a new local-only LiveKit
+key mapping (`key: secret`, using a randomly generated secret of at least
+32 characters). Keep this ignored file private; do not reuse production keys.
+
+```bash
+docker compose -f compose.local.yaml up -d --build
+docker compose -f compose.local.yaml ps
+```
+
+Open **http://localhost:3000**. The image includes the frontend and API;
+LiveKit runs alongside it. The health endpoint is `/api/health`. This setup
+publishes ports only on loopback and is intended for calls on this computer.
+It uses separate local credentials and a separate persistent data volume.
+Stop it with `docker compose -f compose.local.yaml stop`.
+
+The optional server settings `BIND_ADDRESS`, `LIVEKIT_HTTP_URL`, and
+`LIVEKIT_WS_URL` configure container networking. Their defaults retain the
+production loopback binding and production LiveKit addresses.
+
 Use Node 24. Run `npm ci`, `npm test`, and `npm run build`. Do not run the
 server without its protected credentials and LiveKit dependency.
 

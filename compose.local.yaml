@@ -1,0 +1,54 @@
+name: nashvel-local
+services:
+  secret-init:
+    image: nashvel-local-meet
+    user: "0:0"
+    entrypoint: ["node", "-e"]
+    command:
+      - "const fs=require('node:fs'); fs.copyFileSync('/source/local-keys.yaml','/credentials/livekit_keys'); fs.chownSync('/credentials/livekit_keys',1000,1000); fs.chmodSync('/credentials/livekit_keys',0o600);"
+    volumes:
+      - ./secrets/local-keys.yaml:/source/local-keys.yaml:ro
+      - credentials:/credentials
+  livekit:
+    image: livekit/livekit-server:v1.13.10@sha256:89ca9ce0791e18d6e03bf6e2c49ceb27e1c754eae8bd50c989386c1a5963791a
+    command: ["--config", "/etc/livekit.yaml"]
+    restart: unless-stopped
+    depends_on:
+      secret-init:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:7880:7880"
+      - "127.0.0.1:7881:7881"
+      - "127.0.0.1:7882:7882/udp"
+    volumes:
+      - ./deploy/livekit.local.yaml:/etc/livekit.yaml:ro
+      - credentials:/run/secrets:ro
+  meet:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      livekit:
+        condition: service_started
+      secret-init:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      PUBLIC_ORIGIN: http://localhost:3000
+      BIND_ADDRESS: 0.0.0.0
+      LIVEKIT_HTTP_URL: http://livekit:7880
+      LIVEKIT_WS_URL: ws://localhost:7880
+      LIVEKIT_KEY_FILE: /run/secrets/livekit_keys
+      DATA_DIR: /data
+    volumes:
+      - credentials:/run/secrets:ro
+      - meet_data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+volumes:
+  credentials:
+  meet_data:
